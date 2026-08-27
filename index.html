@@ -1,0 +1,578 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Magnificent Piggy v0.14</title>
+<style>
+:root{
+  --bg:#050505;--card:#292929;--line:#625654;--pig:#dca9a5;--snout:#e8c2bf;
+  --muted:#aaa;--accent:#ed6aa7;--blue:#477dd5
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:#f7f7f7;font-family:Arial,Helvetica,sans-serif}
+.app{max-width:520px;margin:auto;min-height:100vh;padding:18px 14px 92px}
+.screen{display:none}.screen.on{display:block}
+.top,.row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.top{margin-bottom:16px}
+.brand{font-size:29px;font-weight:900;letter-spacing:-1px}
+.muted{font-size:12px;color:var(--muted)}
+button,input,select{font:inherit}
+.small{background:#222;color:#fff;border:1px solid #444;border-radius:13px;padding:10px 13px}
+.pink{background:var(--accent);color:#fff;border:0;border-radius:16px;padding:14px;font-weight:900}
+.card{background:var(--card);border:1px solid #414141;border-radius:23px;padding:17px;margin-bottom:13px}
+.goal-shell{position:relative;overflow:hidden;border-radius:22px;background:#8d2929;margin-bottom:12px}
+.delete{position:absolute;right:0;inset-block:0;width:94px;display:flex;align-items:center;justify-content:center;font-weight:900}
+.goal{position:relative;width:100%;background:#292929;color:#fff;border:1px solid #414141;border-radius:22px;padding:16px;text-align:left;touch-action:pan-y;transition:transform .14s}
+.goal h3{font-size:20px;margin:0 0 4px}
+.bar{height:11px;background:#eee;border-radius:99px;overflow:hidden;margin-top:9px}
+.fill{height:100%;background:var(--blue)}
+.form{display:grid;gap:11px}
+.input{width:100%;margin-top:5px;padding:13px;border-radius:14px;border:1px solid #444;background:#151515;color:#fff}
+.money{font-size:34px;font-weight:900}
+.feedgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.feed{min-height:88px;border:1px solid #454545;border-radius:17px;background:#2c2c2c;color:#fff}
+.feed b{display:block;font-size:28px;margin-bottom:4px}
+.feed:disabled{opacity:.35}
+.speech-wrap{min-height:56px;display:flex;align-items:center;justify-content:center;margin:6px 0 8px}
+.speech{max-width:300px;background:#f7f1eb;color:#222;border-radius:16px;padding:10px 13px;font-weight:800;position:relative;opacity:0;transform:translateY(4px);transition:.2s}
+.speech.show{opacity:1;transform:translateY(0)}
+.speech:after{content:"";position:absolute;left:28px;bottom:-8px;border:8px solid transparent;border-top-color:#f7f1eb;border-bottom:0}
+.types,.herd,.pickgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.type,.herditem,.pick{position:relative;background:#232323;border:1px solid #3b3b3b;border-radius:19px;padding:12px;text-align:center;overflow:hidden}
+.type.locked,.pick.locked{opacity:.58}
+.lock{position:absolute;right:10px;top:9px;font-size:22px}
+.pick.selected{outline:2px solid var(--accent);background:#30252b}
+.pick button{all:unset;display:block;width:100%;cursor:pointer}
+.pigbox{height:105px;display:flex;align-items:center;justify-content:center}
+.pig{position:relative;width:105px;height:72px}
+.bodyp{position:absolute;left:31px;top:23px;width:61px;height:38px;background:var(--pig);border:3px solid var(--line);border-radius:50% 45% 45% 48%}
+.headp{position:absolute;left:11px;top:18px;width:41px;height:36px;background:var(--pig);border:3px solid var(--line);border-radius:48%}
+.ear{position:absolute;left:27px;top:7px;width:14px;height:18px;background:var(--pig);border:3px solid var(--line);border-radius:70% 20% 60% 30%;transform:rotate(-15deg)}
+.snout{position:absolute;left:3px;top:33px;width:24px;height:16px;background:var(--snout);border:3px solid var(--line);border-radius:50%}
+.eye{position:absolute;left:39px;top:31px;width:4px;height:4px;background:#555;border-radius:50%}
+.leg{position:absolute;top:57px;width:10px;height:13px;background:var(--pig);border:3px solid var(--line);border-top:0;border-radius:0 0 5px 5px}
+.leg.a{left:45px}.leg.b{left:78px}
+.tail{position:absolute;right:2px;top:35px;width:18px;height:18px;border:3px solid var(--line);border-left-color:transparent;border-radius:50%}
+.spot{position:absolute;background:#92716f;border-radius:50%}.sp1{width:17px;height:12px;left:49px;top:28px}.sp2{width:13px;height:10px;left:70px;top:43px}.sp3{width:11px;height:9px;left:23px;top:24px}
+.fluffy .bodyp,.fluffy .headp{border-style:dashed}
+.tinyear .ear{width:7px;height:8px;left:30px;top:13px;border-width:2px}
+.long{width:145px}.long .bodyp{width:102px;border-radius:42%}.long .leg.b{left:112px}.long .tail{right:-2px}
+.wild .bodyp,.wild .headp,.wild .ear,.wild .leg{background:#986747}.wild .snout{background:#b47d58}.wildhair{position:absolute;left:31px;top:7px;font:18px monospace;color:#69442e;letter-spacing:-4px}
+.gold .bodyp,.gold .headp,.gold .ear,.gold .leg{background:#c9a34c}.gold .snout{background:#e1c06d}
+.spark{position:absolute;font-size:16px}.s1{left:2px;top:2px}.s2{right:-3px;top:12px}
+.locked .pig{filter:grayscale(1) brightness(.2);opacity:.8}
+.locked .spark{display:none}
+.deco{position:absolute;font-size:22px}.bow{left:75px;top:9px}.flower{left:50px;top:44px}.pearls{left:49px;top:53px;font-size:15px;letter-spacing:-4px}.shade{left:34px;top:23px}.crown{left:58px;top:-6px;font-size:27px}.party{right:-8px;top:4px;font-size:25px}
+.type-name{font-weight:900}.tiny{font-size:11px;color:#999;margin-top:3px}
+.nav{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);width:min(492px,calc(100% - 28px));display:grid;grid-template-columns:repeat(4,1fr);gap:6px;background:#151515;border:1px solid #333;padding:7px;border-radius:18px}
+.nav button{background:transparent;border:0;color:#aaa;padding:10px}.nav .active{background:#333;color:#fff;border-radius:12px}
+.modalbg{position:fixed;inset:0;background:#000b;display:flex;align-items:center;justify-content:center;padding:20px;z-index:10}
+.modal{width:min(360px,100%);background:#292929;border:1px solid #555;border-radius:22px;padding:20px}
+.hidden{display:none!important}
+.field-error{font-size:12px;color:#ff9dbd;margin-top:5px;display:none}
+@media(max-width:360px){.types,.herd,.pickgrid{grid-template-columns:1fr}.feedgrid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<main class="app">
+<section id="home" class="screen on">
+  <div class="top">
+    <div>
+      <div class="brand">MP 🐽</div>
+      <div id="tagline" class="muted">MAGNIFICENT PIGGY · Invest in your future piggy 🌱💰✨</div>
+    </div>
+    <button id="langToggle" class="small" type="button">日本語</button>
+  </div>
+  <div id="goals"></div>
+  <button id="newbtn" class="pink" style="width:100%">＋ Start a new project</button>
+</section>
+
+<section id="create" class="screen">
+  <div class="top"><button class="small back">← Back</button><div id="newPiggyTitle" class="brand">New piggy</div></div>
+  <div class="card">
+    <h2 id="savingForTitle">What are you saving up for?</h2>
+    <form id="form" class="form" novalidate>
+      <label class="muted"><span id="projectNameLabel">Project name</span>
+        <input id="pname" class="input" placeholder="Summer holiday">
+        <div id="nameError" class="field-error">Please enter a project name.</div>
+      </label>
+      <label class="muted"><span id="goalFieldLabel">Goal</span>
+        <input id="target" class="input" type="number" min="1" value="1000">
+        <div id="goalError" class="field-error">Please enter a valid goal amount.</div>
+      </label>
+      <label class="muted"><span id="currencyLabel">Currency</span>
+        <select id="currency" class="input">
+          <option>JPY</option><option>USD</option><option>EUR</option><option>GBP</option><option>NOK</option>
+        </select>
+      </label>
+      
+      <div>
+        <div id="choosePiggyLabel" style="font-weight:900;margin:4px 0 8px">Choose your piggy</div>
+        <div id="pickgrid" class="pickgrid"></div>
+      </div>
+      <button id="createProjectBtn" class="pink">Create project</button>
+    </form>
+  </div>
+</section>
+
+<section id="detail" class="screen">
+  <div class="top"><button class="small back">← Back</button><button id="rename" class="small">Edit</button></div>
+  <div class="card">
+    <h2 id="dtitle"></h2>
+    <div id="speechWrap" class="speech-wrap"><div id="speech" class="speech"></div></div>
+    <div id="pigstage" class="pigbox"></div>
+    <div id="status" style="text-align:center;font-size:22px;font-weight:900;margin-bottom:18px"></div>
+    <div class="row"><div><div id="savedLabel" class="muted">saved</div><div id="saved" class="money"></div></div><div style="text-align:right"><div id="goalLabel" class="muted">goal</div><b id="goal"></b></div></div>
+    <div class="bar"><div id="prog" class="fill"></div></div>
+    <div class="row tiny" style="margin-top:6px"><span id="pct"></span><span id="remain"></span></div>
+  </div>
+  <div class="card">
+    <h3 id="feedTitle">Feed your piggy</h3>
+    <div id="feeds" class="feedgrid"></div>
+  </div>
+</section>
+
+<section id="herd" class="screen"><div class="top"><button class="small back">← Back</button><div id="herdTitle" class="brand">The Magnificent Herd</div></div><div id="herdlist" class="herd"></div></section>
+<section id="types" class="screen"><div class="top"><button class="small back">← Back</button><div id="typesTitle" class="brand">Piggy types</div></div><div id="typesSubtitle" class="muted" style="margin-bottom:14px">Same bad HTML pig. Different unfortunate shapes.</div><div id="typelist" class="types"></div></section>
+
+<section id="about" class="screen">
+  <div class="top"><button class="small back">← Back</button><div id="aboutTitle" class="brand">About</div></div>
+  <div class="card" style="text-align:center;padding:28px 18px">
+    <div class="brand" style="font-size:25px">MAGNIFICENT PIGGY</div>
+    <div id="aboutTagline" style="margin-top:6px;font-style:italic">Invest in your future piggy 🌱💰✨</div>
+    <div class="pigbox" style="margin:18px auto 8px"><div id="aboutpig"></div></div>
+    <p id="aboutText" class="muted" style="font-size:14px;line-height:1.65">
+      A tiny saving app about feeding a pig<br>
+      and watching it become unnecessarily magnificent.
+    </p>
+    <div style="margin-top:28px;font-weight:900">Created by Sari, who has goals to feed.</div>
+    <div class="tiny" style="margin-top:8px">Version 0.14</div>
+  </div>
+</section>
+
+</main>
+
+<nav class="nav"><button id="navHome" data-page="home" class="active">Home</button><button id="navHerd" data-page="herd">Herd</button><button id="navPiggies" data-page="types">Piggies</button><button id="navAbout" data-page="about">About</button></nav>
+
+<div id="modal" class="modalbg hidden">
+  <div class="modal">
+    <h2 id="releaseTitle">Release this piggy?</h2>
+    <p id="modaltext" class="muted"></p>
+    <div class="row"><button id="keep" class="small">Keep piggy</button><button id="release" class="pink">Release</button></div>
+  </div>
+</div>
+
+<script>
+const S={JPY:'¥',USD:'$',EUR:'€',GBP:'£',NOK:'kr '};
+
+const LANG_KEY='magnificent_piggy_language';
+let lang='en';
+try{
+  lang=localStorage.getItem(LANG_KEY)||'en';
+}catch(e){
+  lang='en';
+}
+
+const TXT={
+  en:{
+    tagline:'MAGNIFICENT PIGGY · Invest in your future piggy 🌱💰✨',
+    newProject:'＋ Start a new project',newPiggy:'New piggy',savingFor:'What are you saving up for?',
+    projectName:'Project name',projectPlaceholder:'Summer holiday',nameError:'Please enter a project name.',
+    goalField:'Goal',goalError:'Please enter a valid goal amount.',currency:'Currency',
+    choosePiggy:'Choose your piggy',createProject:'Create project',edit:'Edit',
+    saved:'saved',goal:'goal',feed:'Feed your piggy',herd:'The Magnificent Herd',
+    types:'Piggy types',typesSubtitle:'Same bad HTML pig. Different unfortunate shapes.',
+    about:'About',aboutTagline:'Invest in your future piggy 🌱💰✨',
+    aboutText:'A tiny saving app about feeding a pig<br>and watching it become unnecessarily magnificent.',
+    home:'Home',herdNav:'Herd',piggies:'Piggies',releaseTitle:'Release this piggy?',
+    keep:'Keep piggy',release:'Release',back:'← Back',delete:'Delete',
+    reached:'Goal reached 🎉',done:'Done!',toGo:'to go',available:'Available',
+    empty:tx('empty'),prompt:'Project name',
+    releaseDone:'This project and its magnificent piggy will be gone.',
+    releaseUndone:'This unfinished project and its progress will be gone.',
+    magnificent:'MAGNIFICENT!'
+  },
+  ja:{
+    tagline:'MAGNIFICENT PIGGY · 未来のピギーに投資しよう 🌱💰✨',
+    newProject:'＋ 新しいプロジェクト',newPiggy:'新しいピギー',savingFor:'何のために貯める？',
+    projectName:'プロジェクト名',projectPlaceholder:'夏休み',nameError:'プロジェクト名を入力してください。',
+    goalField:'目標額',goalError:'有効な目標額を入力してください。',currency:'通貨',
+    choosePiggy:'ピギーを選ぶ',createProject:'プロジェクトを作成',edit:'編集',
+    saved:'貯金額',goal:'目標額',feed:'ピギーにごはんをあげる',herd:'マグニフィセントな群れ',
+    types:'ピギーの種類',typesSubtitle:'同じへぼHTML豚。ちょっとずつ残念な別フォルム。',
+    about:'このアプリについて',aboutTagline:'未来のピギーに投資しよう 🌱💰✨',
+    aboutText:'豚にごはんをあげながら貯金して、<br>必要以上にマグニフィセントになっていく姿を見守る小さなアプリ。',
+    home:'ホーム',herdNav:'群れ',piggies:'ピギー',releaseTitle:'このピギーを手放す？',
+    keep:'残しておく',release:'手放す',back:'← 戻る',delete:'削除',
+    reached:'目標達成 🎉',done:'達成！',toGo:'あと',available:'使用可能',
+    empty:'マグニフィセントなピギーはまだいません。',prompt:'プロジェクト名',
+    releaseDone:'このプロジェクトとマグニフィセントなピギーは消えます。',
+    releaseUndone:'この未達成プロジェクトと、これまでの貯金記録は消えます。',
+    magnificent:'マグニフィセント！'
+  }
+};
+const tx=k=>TXT[lang][k];
+
+const TYPE_JA=[
+ ['クラシック・ピンク・ピギー','元祖ピギー。'],
+ ['ぶち模様ピギー','あやしいくらい、ぶち模様。'],
+ ['ふわふわピギー','羊が混ざっている可能性あり。'],
+ ['ちび耳ピギー','耳、かなり小さめ。'],
+ ['ロング・ピギー','必要以上に長い。'],
+ ['ワイルド・ピギー','茶色。ちょっと野生。でも礼儀正しい。'],
+ ['ゴールデン・ピギー','ひどい骨格はそのまま、金色に。']
+];
+const STATUS_JA=['つつましいピギー','ちょっと元気なピギー','かわいくなってきた','かなりいい感じ','なんだかエレガント','すばらしくゴージャス','MAGNIFICENT PIGGY'];
+
+const SPEECH_JA={
+ '🎉 Magnificent. We did it.':'🎉 マグニフィセント。やったね。',
+ '🎉 MAGNIFICENT PIGGY.':'🎉 MAGNIFICENT PIGGY.',
+ '🎉 Such beauty. Such savings.':'🎉 この美しさ。この貯金。',
+ '🎉 Piggy has achieved magnificence.':'🎉 ピギー、マグニフィセンスを達成。',
+ 'Every snack counts.':'ひとくちだって、ちゃんと貯金。','Tiny snack. Excellent.':'小さなごはん。すばらしい。',
+ 'A humble beginning.':'つつましい始まり。','Piggy appreciates this.':'ピギー、感謝しています。',
+ 'Small snack, big dreams.':'小さなごはん、大きな夢。','A modest contribution.':'ささやかな貢献。',
+ 'Pig got prettier.':'ピギー、ちょっときれいになった。','Oh! An apple.':'おっ！りんご。',
+ 'Piggy got prettier.':'ピギー、きれいになった。','Looking rather rosy.':'なんだか血色がいい。',
+ 'Quite nice, actually.':'実際、かなりいい。','A fine choice.':'よい選択です。','Piggy approves.':'ピギー、承認。',
+ 'We are making progress.':'進んでおります。','Piggy got ice cream!':'ピギー、アイスを手に入れた！',
+ 'Quite lovely.':'かなりラブリー。','Such fine hair.':'なんて立派な毛並み。','Getting prettier somehow.':'なぜか、どんどんきれいになる。',
+ 'Piggy is glowing.':'ピギー、輝いてる。','This feels luxurious.':'これは贅沢。','An excellent development.':'すばらしい展開。',
+ 'Magnificent piggy.':'マグニフィセント・ピギー。','Feeling rather spoiled.':'だいぶ甘やかされている。',
+ 'A proper meal. Splendid.':'ちゃんとしたごはん。すばらしい。','Looking rather elegant today.':'今日はなんだかエレガント。',
+ 'My goodness.':'まあ大変。','Piggy has standards now.':'ピギーにも格というものが出てきた。','We are becoming somebody.':'何者かになりつつある。',
+ 'Quite sophisticated.':'かなり洗練されている。','Unreasonably elegant.':'理由もなくエレガント。','MY GOODNESS.':'まあ大変。',
+ 'A WHOLE CAKE?! 🎂':'ホールケーキ丸ごと？！ 🎂','Absolutely fabulous.':'圧倒的にファビュラス。',
+ 'This changes everything.':'すべてが変わる。','Magnificence intensifies.':'マグニフィセンス増量中。',
+ 'Piggy will remember this.':'ピギーはこの恩を忘れない。','We live well.':'いい暮らしをしています。',
+ 'Such beauty.':'この美しさ。','Financially responsible. Visually stunning.':'金銭的に堅実。見た目は衝撃的。',
+ 'Unexpectedly elegant.':'予想外にエレガント。','This pig has potential.':'この豚、伸びしろがある。'
+};
+
+function typeMetaLocal(t,i){
+  if(lang==='en') return t;
+  return {...t,name:TYPE_JA[i][0],note:TYPE_JA[i][1]};
+}
+function statusLocal(i){return lang==='ja'?STATUS_JA[i]:names[i]}
+function unlockLocal(n){return lang==='ja'?`プロジェクトを${n}個達成で解放`:`${n} completed project${n>1?'s':''}`}
+
+function applyLanguage(){
+  document.documentElement.lang=lang;
+  $('#tagline').textContent=tx('tagline');
+  $('#newbtn').textContent=tx('newProject');
+  $('#newPiggyTitle').textContent=tx('newPiggy');
+  $('#savingForTitle').textContent=tx('savingFor');
+  $('#projectNameLabel').textContent=tx('projectName');
+  $('#pname').placeholder=tx('projectPlaceholder');
+  $('#nameError').textContent=tx('nameError');
+  $('#goalFieldLabel').textContent=tx('goalField');
+  $('#goalError').textContent=tx('goalError');
+  $('#currencyLabel').textContent=tx('currency');
+  $('#choosePiggyLabel').textContent=tx('choosePiggy');
+  $('#createProjectBtn').textContent=tx('createProject');
+  $('#rename').textContent=tx('edit');
+  $('#savedLabel').textContent=tx('saved');
+  $('#goalLabel').textContent=tx('goal');
+  $('#feedTitle').textContent=tx('feed');
+  $('#herdTitle').textContent=tx('herd');
+  $('#typesTitle').textContent=tx('types');
+  $('#typesSubtitle').textContent=tx('typesSubtitle');
+  $('#aboutTitle').textContent=tx('about');
+  $('#aboutTagline').textContent=tx('aboutTagline');
+  $('#aboutText').innerHTML=tx('aboutText');
+  $('#navHome').textContent=tx('home');
+  $('#navHerd').textContent=tx('herdNav');
+  $('#navPiggies').textContent=tx('piggies');
+  $('#navAbout').textContent=tx('about');
+  $('#releaseTitle').textContent=tx('releaseTitle');
+  $('#keep').textContent=tx('keep');
+  $('#release').textContent=tx('release');
+  $$('.back').forEach(b=>b.textContent=tx('back'));
+  $('#langToggle').textContent=lang==='en'?'日本語':'EN';
+  try{
+    localStorage.setItem(LANG_KEY,lang);
+  }catch(e){}
+}
+
+const TYPE_META=[
+  {name:'Classic Pink Piggy',cls:'',need:0,note:'The original.'},
+  {name:'Spotted Piggy',cls:'spotted',need:1,note:'Suspiciously blotchy.'},
+  {name:'Fluffy Piggy',cls:'fluffy',need:2,note:'May or may not be part sheep.'},
+  {name:'Tiny-eared Piggy',cls:'tinyear',need:3,note:'Very little ear.'},
+  {name:'Long Piggy',cls:'long',need:5,note:'Unnecessarily long.'},
+  {name:'Wild Piggy',cls:'wild',need:7,note:'Brown. A bit feral. Still polite.'},
+  {name:'Golden Piggy',cls:'gold',need:10,note:'Same terrible anatomy, now gold.'}
+];
+let current=null,del=null,stack=['home'],speechTimer=null,selectedType='';
+const STORAGE_KEY='magnificent_piggy_v011_projects';
+let projects=[];
+try{
+  const savedState=localStorage.getItem(STORAGE_KEY);
+  projects=savedState?JSON.parse(savedState):[];
+  if(!Array.isArray(projects)) projects=[];
+  projects=projects.filter(p=>!p.archived);
+}catch(e){
+  projects=[];
+}
+function saveProjects(){
+  try{
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(projects));
+  }catch(e){}
+}
+const $=q=>document.querySelector(q), $$=q=>[...document.querySelectorAll(q)];
+const cash=(n,c)=>S[c]+Number(n).toLocaleString();
+const esc=s=>String(s).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[ch]));
+const names=['Humble piggy','Fresh piggy','Pretty piggy','Quite lovely now','Feeling rather elegant','Absolutely fabulous','MAGNIFICENT PIGGY'];
+
+function lvl(p){let x=p.saved/p.goal*100;return x>=100?6:x>=80?5:x>=60?4:x>=40?3:x>=25?2:x>=10?1:0}
+function pig(cls='',l=0,locked=false){
+  return `<div class="pig ${cls}">
+    ${cls==='wild'?'<i class="wildhair">^^^^^^</i>':''}
+    ${cls==='gold'&&!locked?'<i class="spark s1">✨</i><i class="spark s2">✨</i>':''}
+    <i class="tail"></i><i class="bodyp"></i>
+    ${cls==='spotted'?'<i class="spot sp1"></i><i class="spot sp2"></i>':''}
+    <i class="leg a"></i><i class="leg b"></i><i class="headp"></i>
+    ${cls==='spotted'?'<i class="spot sp3"></i>':''}
+    <i class="ear"></i><i class="snout"></i><i class="eye"></i>
+    ${!locked&&l>=2?'<i class="deco bow">🎀</i>':''}
+    ${!locked&&l>=3?'<i class="deco flower">🌸</i>':''}
+    ${!locked&&l>=4?'<i class="deco pearls">○○○○○</i>':''}
+    ${!locked&&l>=5?'<i class="deco shade">🕶️</i>':''}
+    ${!locked&&l>=6?'<i class="deco crown">👑</i><i class="deco party">🎉</i>':''}
+  </div>`;
+}
+function page(id,push=true){
+  $$('.screen').forEach(x=>x.classList.remove('on')); $('#'+id).classList.add('on');
+  $$('.nav button').forEach(x=>x.classList.toggle('active',x.dataset.page===id));
+  if(push&&stack.at(-1)!==id) stack.push(id);
+  if(id==='home')home(); if(id==='types')types(); if(id==='herd')herd(); if(id==='create')renderPicker(); if(id==='about')$('#aboutpig').innerHTML=pig('',6);
+}
+function back(){if(stack.length>1)stack.pop();page(stack.at(-1)||'home',false)}
+function completedCount(){return projects.filter(p=>p.done).length}
+function home(){
+  $('#goals').innerHTML=projects.filter(p=>!p.archived).map(p=>{
+    let pc=Math.min(100,Math.round(p.saved/p.goal*100));
+    return `<div class="goal-shell">
+      <div class="delete" data-del="${p.id}">${tx("delete")}</div>
+      <div class="goal" data-id="${p.id}">
+        <div class="row"><div><h3>${esc(p.name)}</h3><div class="muted">${p.done?tx('reached'):statusLocal(lvl(p))}</div></div><div class="pigbox" style="height:72px">${pig(p.type,lvl(p))}</div></div>
+        <div class="row" style="margin-top:11px"><b>${cash(p.saved,p.c)}</b><span class="muted">of ${cash(p.goal,p.c)}</span></div>
+        <div class="bar"><div class="fill" style="width:${pc}%"></div></div>
+      </div>
+    </div>`;
+  }).join('');
+  $$('.goal').forEach(card=>{
+    let sx=0,dx=0,moved=false;
+    card.onpointerdown=e=>{sx=e.clientX;dx=0;moved=false;card.setPointerCapture(e.pointerId)};
+    card.onpointermove=e=>{if(!sx)return;dx=Math.min(0,e.clientX-sx);if(Math.abs(dx)>5)moved=true;card.style.transform=`translateX(${Math.max(-94,dx)}px)`};
+    card.onpointerup=()=>{card.style.transform=dx<-45?'translateX(-94px)':'';if(!moved)open(+card.dataset.id);sx=0};
+  });
+  $$('[data-del]').forEach(b=>b.onclick=()=>ask(+b.dataset.del));
+}
+function open(id){
+  current=id;
+  clearTimeout(speechTimer);
+  $('#speech').textContent='';
+  $('#speech').classList.remove('show');
+  detail();
+  page('detail');
+}
+function showSpeech(text,persistent=false){
+  if(lang==='ja') text=SPEECH_JA[text]||text;
+  clearTimeout(speechTimer);
+  const el=$('#speech'); el.textContent=text; el.classList.add('show');
+  if(!persistent) speechTimer=setTimeout(()=>el.classList.remove('show'),1800);
+}
+function detail(){
+  let p=projects.find(x=>x.id===current); if(!p)return;
+  let pc=Math.min(100,Math.round(p.saved/p.goal*100)),l=lvl(p);
+  $('#dtitle').textContent=p.name;
+  $('#pigstage').innerHTML=pig(p.type,l);
+  $('#status').textContent=statusLocal(l);
+  $('#saved').textContent=cash(p.saved,p.c); $('#goal').textContent=cash(p.goal,p.c);
+  $('#prog').style.width=pc+'%'; $('#pct').textContent=pc+'%';
+  $('#remain').textContent=p.done?tx('done'):(lang==='ja'?tx('toGo')+' '+cash(p.goal-p.saved,p.c):cash(p.goal-p.saved,p.c)+' '+tx('toGo'));
+  let vals=p.c==='JPY'?[10,100,500,1000,5000]:p.c==='NOK'?[1,10,50,100,500]:[1,5,10,25,50],foods=['🌱','🍎','🍦','🥪','🎂'];
+  $('#feeds').innerHTML=vals.map((v,i)=>`<button class="feed" data-v="${v}" ${p.done?'disabled':''}><b>${foods[i]}</b>${cash(v,p.c)}</button>`).join('');
+  $$('.feed').forEach(b=>b.onclick=()=>feed(+b.dataset.v));
+  if(p.done){
+    showSpeech('🎉 Magnificent. We did it.',true);
+  }else{
+    clearTimeout(speechTimer);
+    $('#speech').textContent='';
+    $('#speech').classList.remove('show');
+  }
+}
+function feed(v){
+  let p=projects.find(x=>x.id===current); if(!p||p.done)return;
+  p.saved=Math.min(p.goal,p.saved+v); saveProjects();
+
+  if(p.saved===p.goal){
+    p.done=true; saveProjects();
+    detail();
+    const win=[
+      '🎉 Magnificent. We did it.',
+      '🎉 MAGNIFICENT PIGGY.',
+      '🎉 Such beauty. Such savings.',
+      '🎉 Piggy has achieved magnificence.'
+    ];
+    showSpeech(win[Math.floor(Math.random()*win.length)],true);
+    return;
+  }
+
+  detail();
+
+  const vals=p.c==='JPY'?[10,100,500,1000,5000]:p.c==='NOK'?[1,10,50,100,500]:[1,5,10,25,50];
+  const i=Math.max(0,vals.indexOf(v));
+
+  const lines=[
+    [
+      'Every snack counts.',
+      'Tiny snack. Excellent.',
+      'A humble beginning.',
+      'Piggy appreciates this.',
+      'Small snack, big dreams.',
+      'A modest contribution.',
+      'Pig got prettier.'
+    ],
+    [
+      'Oh! An apple.',
+      'Piggy got prettier.',
+      'Looking rather rosy.',
+      'Quite nice, actually.',
+      'A fine choice.',
+      'Piggy approves.',
+      'We are making progress.'
+    ],
+    [
+      'Piggy got ice cream!',
+      'Quite lovely.',
+      'Such fine hair.',
+      'Getting prettier somehow.',
+      'Piggy is glowing.',
+      'This feels luxurious.',
+      'An excellent development.',
+      'Magnificent piggy.'
+    ],
+    [
+      'Feeling rather spoiled.',
+      'A proper meal. Splendid.',
+      'Looking rather elegant today.',
+      'My goodness.',
+      'Piggy has standards now.',
+      'We are becoming somebody.',
+      'Quite sophisticated.',
+      'Unreasonably elegant.'
+    ],
+    [
+      'MY GOODNESS.',
+      'A WHOLE CAKE?! 🎂',
+      'Absolutely fabulous.',
+      'This changes everything.',
+      'Magnificence intensifies.',
+      'Piggy will remember this.',
+      'We live well.',
+      'Such beauty.',
+      'Financially responsible. Visually stunning.'
+    ]
+  ];
+
+  /* Rare dry little remarks, independent of food tier. */
+  const rare=[
+    'Magnificent piggy.',
+    'Pig got prettier.',
+    'Such beauty.',
+    'Unexpectedly elegant.',
+    'This pig has potential.'
+  ];
+
+  let text;
+  if(Math.random()<0.12){
+    text=rare[Math.floor(Math.random()*rare.length)];
+  }else{
+    const pool=lines[i]||lines[0];
+    text=pool[Math.floor(Math.random()*pool.length)];
+  }
+  showSpeech(text);
+}
+function renderPicker(){
+  const n=completedCount();
+  if(!TYPE_META.some(t=>t.cls===selectedType && n>=t.need)) selectedType='';
+  $('#pickgrid').innerHTML=TYPE_META.map((base,i)=>{ const t=typeMetaLocal(base,i);
+    const locked=n<t.need,selected=selectedType===t.cls;
+    return `<div class="pick ${locked?'locked':''} ${selected?'selected':''}">
+      ${locked?'<span class="lock">🔒</span>':''}
+      <button type="button" data-type="${t.cls}" ${locked?'disabled':''}>
+        <div class="pigbox">${pig(t.cls,0,locked)}</div>
+        <div class="type-name">${t.name}</div>
+        <div class="tiny">${locked?unlockLocal(t.need):tx('available')}</div>
+      </button>
+    </div>`;
+  }).join('');
+  $$('#pickgrid [data-type]').forEach(b=>b.onclick=()=>{selectedType=b.dataset.type;renderPicker()});
+}
+function types(){
+  let n=completedCount();
+  $('#typelist').innerHTML=TYPE_META.map((base,i)=>{ const t=typeMetaLocal(base,i);
+    let locked=n<t.need;
+    return `<div class="type ${locked?'locked':''}">
+      ${locked?'<span class="lock">🔒</span>':''}
+      <div class="pigbox">${pig(t.cls,0,locked)}</div>
+      <div class="type-name">${t.name}</div>
+      <div class="tiny">${t.need?unlockLocal(t.need):tx('available')}</div>
+      <div class="tiny">${t.note}</div>
+    </div>`;
+  }).join('');
+}
+function herd(){
+  let d=projects.filter(p=>p.done);
+  $('#herdlist').innerHTML=d.length?d.map(p=>`<div class="herditem"><div class="pigbox">${pig(p.type,6)}</div><b>${esc(p.name)}</b><div class="tiny">${cash(p.goal,p.c)} · ${tx('magnificent')}</div></div>`).join(''):'<div class="card">No magnificent piggies yet.</div>';
+}
+function ask(id){
+  del=id;let p=projects.find(x=>x.id===id);
+  $('#modaltext').textContent=p.done?tx('releaseDone'):tx('releaseUndone');
+  $('#modal').classList.remove('hidden');
+}
+$('#keep').onclick=()=>{$('#modal').classList.add('hidden');del=null};
+$('#release').onclick=()=>{
+  let p=projects.find(x=>x.id===del);
+  if(p){projects=projects.filter(x=>x.id!==del);saveProjects()}
+  $('#modal').classList.add('hidden');del=null;home()
+};
+$('#newbtn').onclick=()=>page('create');
+$('#form').onsubmit=e=>{
+  e.preventDefault();
+  const name=$('#pname').value.trim(),goal=Number($('#target').value);
+  $('#nameError').style.display=name?'none':'block';
+  $('#goalError').style.display=goal>0?'none':'block';
+  if(!name||!(goal>0))return;
+  let p={id:Date.now(),name,goal,saved:0,c:$('#currency').value,done:false,type:selectedType};
+  projects.push(p); saveProjects(); e.target.reset(); $('#target').value=1000; selectedType='';
+  stack=['home'];
+  current=p.id;
+  detail();
+  page('detail');
+};
+$('#rename').onclick=()=>{
+  let p=projects.find(x=>x.id===current),v=prompt(tx('prompt'),p.name);
+  if(v&&v.trim()){p.name=v.trim();saveProjects();detail()}
+};
+$$('.back').forEach(b=>b.onclick=back);
+$$('.nav button').forEach(b=>b.onclick=()=>page(b.dataset.page));
+
+$('#langToggle').onclick=()=>{
+  lang=lang==='en'?'ja':'en';
+  applyLanguage();
+  home();
+  if($('#detail').classList.contains('on')) detail();
+  if($('#types').classList.contains('on')) types();
+  if($('#herd').classList.contains('on')) herd();
+  if($('#create').classList.contains('on')) renderPicker();
+};
+applyLanguage();
+
+home();
+</script>
+</body>
+</html>
